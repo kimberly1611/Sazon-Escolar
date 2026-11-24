@@ -1,0 +1,50 @@
+{% extends 'plantilla_base.html' %}
+{% block title %}{{ 'Crear cuenta' if register else 'Iniciar sesión' }} · Sazón Escolar{% endblock %}
+{% block content %}
+<section class="auth-layout wrap">
+  <div class="auth-story">
+    <span class="eyebrow">{{ 'QUÉ BUENO QUE TE UNAS' if register else 'QUÉ BUENO VERTE' }}</span>
+    <h1>{{ 'Un recreo más sencillo empieza aquí.' if register else 'El sabor de tu recreo te espera.' }}</h1>
+    <p>Una cooperativa organizada, pedidos claros y más tiempo para disfrutar.</p>
+    <div class="auth-emoji">🥑</div>
+  </div>
+
+  <div class="auth-card">
+    <span class="eyebrow">{{ 'ÚNETE A SAZÓN' if register else 'BIENVENIDO DE VUELTA' }}</span>
+    <h2>{{ 'Crear cuenta' if register else 'Iniciar sesión' }}</h2>
+    <p class="muted">{{ 'Regístrate como alumno para comenzar a pedir.' if register else 'Ingresa con tu usuario y contraseña.' }}</p>
+    <form method="post" class="form-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if register %}
+        <label>Nombre completo
+          <input name="name" required maxlength="100" autocomplete="name">
+        </label>
+        <label>Nombre de usuario
+          <input name="username" required maxlength="40" autocomplete="username">
+        </label>
+        <label>Correo electrónico <span class="optional">(opcional)</span>
+          <input name="email" type="email" autocomplete="email">
+        </label>
+        <label>Contraseña
+          <input name="password" type="password" required minlength="8" autocomplete="new-password">
+          <small>Usa al menos 8 caracteres.</small>
+        </label>
+      {% else %}
+        <label>Usuario
+          <input name="username" required autocomplete="username">
+        </label>
+        <label>Contraseña
+          <input name="password" type="password" required autocomplete="current-password">
+        </label>
+      {% endif %}
+      <button class="btn primary full" type="submit">{{ 'Crear mi cuenta' if register else 'Entrar a mi panel' }} <span>→</span></button>
+    </form>
+    <p class="switch">{% if register %}¿Ya tienes cuenta? 
+      <a href="{{ url_for('login') }}">Inicia sesión</a>
+      {% else %}¿Primera vez aquí? 
+      <a href="{{ url_for('register') }}">Regístrate</a>
+      {% endif %}
+    </p>
+  </div>
+</section>
+{% endblock %}

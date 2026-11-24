@@ -1,0 +1,284 @@
+
+{% extends 'plantilla_base.html' %}
+
+{% block title %}Mi menú · Sazón Escolar{% endblock %}
+
+{% block content %}
+
+<section class="page-head wrap">
+    <div>
+        <span class="eyebrow">HOLA, {{ current_user.name|upper }}</span>
+        <h1>¿Qué se te antoja <em>hoy?</em></h1>
+        <p>Elige tus favoritos y cocina se encargará del resto.</p>
+    </div>
+
+    <div class="head-stamp" aria-label="Menú del día">
+        MENÚ<br><strong>DEL DÍA</strong> ✳
+    </div>
+</section>
+
+<section class="student-layout wrap">
+
+    <div class="catalog">
+
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">HECHO CON GANAS</span>
+                <h2>El menú</h2>
+            </div>
+
+            <span class="muted">
+                {{ products|length }} opciones
+            </span>
+        </div>
+
+        <form
+            method="post"
+            action="{{ url_for('create_order') }}"
+            id="orderForm"
+            aria-label="Formulario para realizar un pedido">
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}">
+
+            <div class="product-grid">
+
+                {% for p in products %}
+
+                <article
+                    class="product-card"
+                    data-speak-card
+                    data-speech="Producto: {{ p.name }}. Categoría: {{ p.category }}. Descripción e ingredientes: {{ p.description or 'No hay una descripción registrada para este producto.' }}. Precio: {{ p.price|money }} pesos mexicanos. Puedes elegir la cantidad y agregarlo a tu pedido."
+                    aria-label="Producto: {{ p.name }}">
+
+                    <div
+                        class="product-visual {{ p.category }}"
+                        aria-hidden="true">
+
+                        <span>
+                            {{ '🥪' if p.category == 'comida' else ('🥤' if p.category == 'bebida' else '🍰') }}
+                        </span>
+
+                        <small>{{ p.category|upper }}</small>
+
+                    </div>
+
+                    <div class="product-info">
+
+                        <h3>{{ p.name }}</h3>
+
+                        <p>
+                            {{ p.description or 'Preparado para disfrutar.' }}
+                        </p>
+
+                        <div class="product-bottom">
+
+                            <strong aria-label="Precio: {{ p.price|money }} pesos mexicanos">
+                                {{ p.price|money }} <small>MXN</small>
+                            </strong>
+
+                            <label class="quantity">
+                                Cantidad
+
+                                <input
+                                    type="number"
+                                    name="quantity_{{ p._id }}"
+                                    value="1"
+                                    min="1"
+                                    max="20"
+                                    aria-label="Cantidad de {{ p.name }}">
+                            </label>
+
+                        </div>
+
+                        <label class="pick">
+
+                            <input
+                                type="checkbox"
+                                name="product_id"
+                                value="{{ p._id }}"
+                                aria-label="Agregar {{ p.name }} al pedido">
+
+                            Agregar al pedido
+
+                        </label>
+
+                        <button
+                            class="listen-product"
+                            type="button"
+                            data-speech="Producto: {{ p.name }}. Categoría: {{ p.category }}. Descripción e ingredientes: {{ p.description or 'No hay una descripción registrada.' }}. Precio: {{ p.price|money }} pesos mexicanos. Puedes seleccionar la cantidad y agregarlo a tu pedido."
+                            aria-label="Escuchar información de {{ p.name }}">
+
+                            ♧ Escuchar producto
+
+                        </button>
+
+                    </div>
+
+                </article>
+
+                {% else %}
+
+                <p class="empty" role="status">
+                    Todavía no hay productos disponibles. Vuelve pronto.
+                </p>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="order-bar">
+
+                <label for="orderNote">
+                    Nota para cocina (opcional)
+
+                    <input
+                        id="orderNote"
+                        name="note"
+                        maxlength="240"
+                        placeholder="Ej. Sin mayonesa, por favor"
+                        aria-describedby="noteHelp">
+                </label>
+
+                <span id="noteHelp" class="muted">
+                    Puedes escribir indicaciones especiales para tu pedido.
+                </span>
+
+                <div class="order-submit">
+
+                    <span
+                        id="selectionCount"
+                        role="status"
+                        aria-live="polite"
+                        aria-atomic="true">
+
+                        0 productos seleccionados
+
+                    </span>
+
+                    <button
+                        class="btn primary"
+                        type="submit"
+                        aria-label="Enviar mi pedido a cocina">
+
+                        Enviar pedido <span aria-hidden="true">→</span>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <aside
+        class="orders-side"
+        aria-label="Seguimiento de mis pedidos">
+
+        <span class="eyebrow">SIGUE TU ANTOJO</span>
+
+        <h2>Mis pedidos</h2>
+
+        {% for order in orders %}
+
+        <article
+            class="order-card"
+            data-speak-card
+            aria-label="Pedido {{ loop.index }}">
+
+            <div class="order-top">
+
+                <strong>
+                    Pedido #{{ order._id|string|truncate(8, True, '') }}
+                </strong>
+
+                <span
+                    class="status {{ order.status }}"
+                    aria-label="Estado del pedido">
+
+                    {{
+                        {
+                            'pendiente':'Recibido',
+                            'preparando':'Preparando',
+                            'listo':'Listo para recoger',
+                            'entregado':'Entregado',
+                            'cancelado':'Cancelado'
+                        }.get(order.status, order.status)
+                    }}
+
+                </span>
+
+            </div>
+
+            <ul aria-label="Productos de este pedido">
+
+                {% for line in order.lines %}
+
+                <li>
+                    {{ line.quantity }} × {{ line.product_name }}
+
+                    <span>{{ line.subtotal|money }}</span>
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+            <div class="order-total">
+                Total
+                <strong>{{ order.total|money }}</strong>
+            </div>
+
+            {% if order.note %}
+
+            <p class="muted">
+                Nota para cocina: {{ order.note }}
+            </p>
+
+            {% endif %}
+
+            {% if order.status == 'pendiente' %}
+
+            <form
+                method="post"
+                action="{{ url_for('cancel_order', order_id=order._id) }}"
+                aria-label="Cancelar pedido">
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}">
+
+                <button
+                    class="cancel-btn"
+                    type="submit"
+                    data-confirm="¿Cancelar este pedido?"
+                    aria-label="Cancelar pedido {{ order._id|string|truncate(8, True, '') }}">
+
+                    Cancelar pedido
+
+                </button>
+
+            </form>
+
+            {% endif %}
+
+        </article>
+
+        {% else %}
+
+        <p class="muted" role="status">
+            Aún no tienes pedidos. ¡El primero puede ser hoy!
+        </p>
+
+        {% endfor %}
+
+    </aside>
+
+</section>
+
+{% endblock %}

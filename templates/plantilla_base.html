@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#173f35">
+
+    <title>{% block title %}Sazón Escolar{% endblock %}</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='styles.css') }}"
+    >
+</head>
+
+<body>
+
+    <!-- Acceso rápido al contenido -->
+    <a class="skip" href="#contenido">
+        Saltar al contenido principal
+    </a>
+
+    <!-- Encabezado principal -->
+    <header class="topbar">
+
+        <a
+            class="brand"
+            href="{{ url_for('home') }}"
+            aria-label="Sazón Escolar, ir al inicio"
+        >
+            <span class="brand-mark" aria-hidden="true">✳</span>
+
+            <span>
+                sazón<span class="brand-light">escolar</span>
+            </span>
+        </a>
+
+        <!-- Navegación -->
+        <nav aria-label="Navegación principal">
+
+            {% if current_user.is_authenticated %}
+
+                <span class="nav-welcome">
+                    Hola, {{ current_user.name }}
+                </span>
+
+                <a href="{{ url_for('dashboard') }}">
+                    Mi panel
+                </a>
+
+                <a
+                    class="nav-cta"
+                    href="{{ url_for('logout') }}"
+                    aria-label="Cerrar mi sesión"
+                >
+                    Salir
+                </a>
+
+            {% else %}
+
+                <a href="{{ url_for('login') }}">
+                    Iniciar sesión
+                </a>
+
+                <a
+                    class="nav-cta"
+                    href="{{ url_for('register') }}"
+                >
+                    Crear cuenta
+                </a>
+
+            {% endif %}
+
+        </nav>
+
+    </header>
+
+    <!-- Accesibilidad -->
+    <section
+        class="access-strip"
+        aria-label="Opciones de accesibilidad"
+    >
+
+        <button
+    id="voiceToggle"
+    class="voice-toggle"
+    type="button"
+    aria-pressed="true"
+    aria-label="Desactivar lectura de voz"
+    data-speech="La lectura de voz está activada. Presiona este botón para desactivarla."
+>
+    <span aria-hidden="true">◖)))</span>
+    <span>Lectura de voz activada</span>
+</button>
+
+        <span>
+            Accesibilidad · escucha botones, enlaces,
+            formularios y avisos
+        </span>
+
+    </section>
+
+    <!-- Contenido de cada página -->
+    <main
+        id="contenido"
+        tabindex="-1"
+        aria-label="Contenido principal de Sazón Escolar"
+    >
+
+        <!-- Mensajes del sistema -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                <div
+                   class="flash-wrap"
+                   role="region"
+                   aria-label="Avisos del sistema"
+                   aria-live="polite"
+                   aria-atomic="false"
+                >           
+
+                    {% for category, message in messages %}
+
+                        <div
+                            class="flash {{ category }}"
+                            role="status"
+                            aria-live="polite"
+                        >
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
+
+        <!-- Cada página coloca aquí su contenido -->
+        {% block content %}
+        {% endblock %}
+
+    </main>
+
+    <!-- Pie de página -->
+    <footer class="footer">
+
+        <span>
+            Hecho para que pedir sea más fácil.
+        </span>
+
+        <span>
+            SAZÓN ESCOLAR · COOPERATIVA
+        </span>
+
+    </footer>
+
+    <!-- Sistema de lectura de voz -->
+    <script
+        src="{{ url_for('static', filename='app.js') }}"
+        defer
+    ></script>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+{% extends 'plantilla_base.html' %}
+{% block title %}Error {{ code }} · Sazón Escolar{% endblock %}
+{% block content %}
+<section class="error-page wrap">
+    <span class="eyebrow">SAZÓN ESCOLAR</span>
+    <h1>{{ code }}</h1>
+    <h2>{{ message }}</h2>
+    <a class="btn primary" href="{{ url_for('home') }}">Volver al inicio</a>
+</section>
+{% endblock %}

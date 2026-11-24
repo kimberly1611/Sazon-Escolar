@@ -1,0 +1,527 @@
+
+{% extends 'plantilla_base.html' %}
+
+{% block title %}Panel de operación · Sazón Escolar{% endblock %}
+
+{% block content %}
+
+<section class="page-head wrap">
+    <div>
+        <span class="eyebrow">
+            {{ 'CENTRO ADMINISTRATIVO' if current_user.role == 'admin' else 'PANEL DE COCINA' }}
+        </span>
+
+        <h1>Todo bajo <em>control.</em></h1>
+
+        <p>Pedidos claros, equipo coordinado y menú al día.</p>
+    </div>
+
+    <div class="head-stamp" aria-label="Sazón en marcha">
+        SAZÓN<br><strong>EN MARCHA</strong> ✳
+    </div>
+</section>
+
+<section class="stats wrap" aria-label="Resumen de la operación">
+
+    <article>
+        <span>Pedidos registrados</span>
+        <strong>{{ stats.orders }}</strong>
+        <small>Todos los estados</small>
+    </article>
+
+    <article>
+        <span>Usuarios registrados</span>
+        <strong>{{ stats.users }}</strong>
+        <small>Comunidad cooperativa</small>
+    </article>
+
+    <article>
+        <span>Productos activos</span>
+        <strong>{{ stats.products }}</strong>
+        <small>En el menú actual</small>
+    </article>
+
+</section>
+
+<section class="staff-layout wrap">
+
+    <div class="panel">
+
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">OPERACIÓN</span>
+                <h2>Pedidos recibidos</h2>
+            </div>
+
+            <span class="muted">
+                {{ orders|length }} recientes
+            </span>
+        </div>
+
+        {% for order in orders %}
+
+        <article
+            class="ticket"
+            data-speak-card
+            aria-label="Pedido de {{ order.student.name }}"
+        >
+
+            <div class="ticket-head">
+
+                <div>
+                    <strong>
+                        Pedido #{{ order._id|string|truncate(8, True, '') }}
+                        · {{ order.student.name }}
+                    </strong>
+
+                    <small>
+                        {{ order.created_at.strftime('%d/%m/%Y %H:%M') if order.created_at else '' }}
+                        · {{ order.student.username }}
+                    </small>
+                </div>
+
+                <span
+                    class="status {{ order.status }}"
+                    aria-label="Estado actual del pedido"
+                >
+                    {{
+                        {
+                            'pendiente':'Recibido',
+                            'preparando':'Preparando',
+                            'listo':'Listo',
+                            'entregado':'Entregado',
+                            'cancelado':'Cancelado'
+                        }.get(order.status, order.status)
+                    }}
+                </span>
+
+            </div>
+
+            <ul aria-label="Productos solicitados">
+
+                {% for line in order.lines %}
+
+                <li>
+                    {{ line.quantity }} × {{ line.product_name }}
+                    <span>{{ line.subtotal|money }}</span>
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+            {% if order.note %}
+
+            <p class="ticket-note">
+                Nota del alumno: {{ order.note }}
+            </p>
+
+            {% endif %}
+
+            <div class="ticket-foot">
+
+                <strong>
+                    Total: {{ order.total|money }}
+                </strong>
+
+                <form
+                    method="post"
+                    action="{{ url_for('update_status', order_id=order._id) }}"
+                    aria-label="Actualizar estado del pedido de {{ order.student.name }}"
+                >
+
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                    <label
+                        class="sr-only"
+                        for="status-{{ loop.index }}"
+                    >
+                        Nuevo estado del pedido de {{ order.student.name }}
+                    </label>
+
+                    <select
+                        id="status-{{ loop.index }}"
+                        name="status"
+                        aria-label="Seleccionar nuevo estado del pedido de {{ order.student.name }}"
+                    >
+
+                        {% for value, label in [
+                            ('pendiente','Recibido'),
+                            ('preparando','Preparando'),
+                            ('listo','Listo'),
+                            ('entregado','Entregado'),
+                            ('cancelado','Cancelado')
+                        ] %}
+
+                        <option
+                            value="{{ value }}"
+                            {% if order.status == value %}selected{% endif %}
+                        >
+                            {{ label }}
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                    <button
+                        class="btn small-btn"
+                        type="submit"
+                        aria-label="Guardar nuevo estado del pedido de {{ order.student.name }}"
+                    >
+                        Actualizar
+                    </button>
+
+                </form>
+
+            </div>
+
+        </article>
+
+        {% else %}
+
+        <p class="empty" role="status">
+            No hay pedidos por ahora.
+        </p>
+
+        {% endfor %}
+
+    </div>
+
+    <aside class="panel inventory">
+
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">CATÁLOGO</span>
+                <h2>Menú y productos</h2>
+            </div>
+        </div>
+
+        <form
+            method="post"
+            action="{{ url_for('save_product') }}"
+            class="form-stack compact"
+            aria-label="Formulario para agregar un producto"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+            <h3>Agregar producto</h3>
+
+            <label for="newProductName">
+                Nombre del producto
+
+                <input
+                    id="newProductName"
+                    name="name"
+                    required
+                    maxlength="100"
+                    autocomplete="off"
+                >
+            </label>
+
+            <label for="newProductDescription">
+                Descripción
+
+                <input
+                    id="newProductDescription"
+                    name="description"
+                    maxlength="240"
+                >
+            </label>
+
+            <label for="newProductCategory">
+                Categoría del producto
+
+                <select id="newProductCategory" name="category">
+                    <option value="comida">Comida</option>
+                    <option value="bebida">Bebida</option>
+                    <option value="postre">Postre</option>
+                </select>
+            </label>
+
+            <label for="newProductPrice">
+                Precio en pesos mexicanos
+
+                <input
+                    id="newProductPrice"
+                    name="price"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    required
+                >
+            </label>
+
+            <label class="check-label">
+                <input
+                    type="checkbox"
+                    name="available"
+                    checked
+                    aria-label="Marcar el producto como disponible"
+                >
+                Disponible
+            </label>
+
+            <button
+                class="btn primary full"
+                type="submit"
+                aria-label="Guardar nuevo producto en el menú"
+            >
+                Guardar producto +
+            </button>
+
+        </form>
+
+        <h3 class="subheading">Productos existentes</h3>
+
+        {% for p in products %}
+
+        <form
+            method="post"
+            action="{{ url_for('save_product') }}"
+            class="product-edit"
+            aria-label="Editar producto {{ p.name }}"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+            <input
+                type="hidden"
+                name="product_id"
+                value="{{ p._id }}"
+            >
+
+            <label
+                class="sr-only"
+                for="product-{{ loop.index }}"
+            >
+                Nombre del producto
+            </label>
+
+            <input
+                id="product-{{ loop.index }}"
+                name="name"
+                value="{{ p.name }}"
+                required
+                aria-label="Nombre del producto {{ p.name }}"
+            >
+
+            <label class="sr-only" for="category-{{ loop.index }}">
+                Categoría de {{ p.name }}
+            </label>
+
+            <select
+                id="category-{{ loop.index }}"
+                name="category"
+                aria-label="Categoría de {{ p.name }}"
+            >
+                <option value="comida" {% if p.category == 'comida' %}selected{% endif %}>Comida</option>
+                <option value="bebida" {% if p.category == 'bebida' %}selected{% endif %}>Bebida</option>
+                <option value="postre" {% if p.category == 'postre' %}selected{% endif %}>Postre</option>
+            </select>
+
+            <label class="sr-only" for="price-{{ loop.index }}">
+                Precio de {{ p.name }}
+            </label>
+
+            <input
+                id="price-{{ loop.index }}"
+                name="price"
+                type="number"
+                min="0.01"
+                step="0.01"
+                value="{{ p.price }}"
+                required
+                aria-label="Precio de {{ p.name }} en pesos mexicanos"
+            >
+
+            <label class="sr-only" for="description-{{ loop.index }}">
+                Descripción de {{ p.name }}
+            </label>
+
+            <input
+                id="description-{{ loop.index }}"
+                name="description"
+                value="{{ p.description }}"
+                placeholder="Descripción"
+                aria-label="Descripción de {{ p.name }}"
+            >
+
+            <label class="check-label">
+                <input
+                    type="checkbox"
+                    name="available"
+                    {% if p.available %}checked{% endif %}
+                    aria-label="Disponibilidad de {{ p.name }}"
+                >
+                Activo
+            </label>
+
+            <button
+                class="save-mini"
+                type="submit"
+                aria-label="Guardar cambios del producto {{ p.name }}"
+            >
+                Guardar
+            </button>
+
+        </form>
+
+        <form
+            method="post"
+            action="{{ url_for('delete_product', product_id=p._id) }}"
+            class="delete-inline"
+            data-confirm="¿Eliminar {{ p.name }} del catálogo?"
+            aria-label="Eliminar producto {{ p.name }}"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+            <button
+                class="cancel-btn"
+                type="submit"
+                aria-label="Eliminar {{ p.name }} del menú"
+            >
+                Eliminar
+            </button>
+
+        </form>
+
+        {% endfor %}
+
+        {% if current_user.role == 'admin' %}
+
+        <div class="admin-users">
+
+            <span class="eyebrow">EQUIPO</span>
+
+            <h3>Administrar cuentas</h3>
+
+            {% for person in users %}
+
+            <form
+                method="post"
+                action="{{ url_for('change_role', user_id=person._id) }}"
+                class="role-row"
+                aria-label="Cambiar rol de {{ person.name }}"
+            >
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <div>
+                    <strong>{{ person.name }}</strong>
+                    <small>{{ person.username }}</small>
+                </div>
+
+                <label class="sr-only" for="role-{{ loop.index }}">
+                    Seleccionar rol de {{ person.name }}
+                </label>
+
+                <select
+                    id="role-{{ loop.index }}"
+                    name="role"
+                    aria-label="Rol de {{ person.name }}"
+                >
+
+                    <option
+                        value="alumno"
+                        {% if person.role == 'alumno' %}selected{% endif %}
+                    >
+                        Alumno
+                    </option>
+
+                    <option
+                        value="cocinero"
+                        {% if person.role == 'cocinero' %}selected{% endif %}
+                    >
+                        Cocinero
+                    </option>
+
+                </select>
+
+                <button
+                    class="save-mini"
+                    type="submit"
+                    aria-label="Guardar el nuevo rol de {{ person.name }}"
+                >
+                    Guardar
+                </button>
+
+            </form>
+
+            {% else %}
+
+            <p class="muted">
+                No hay cuentas adicionales.
+            </p>
+
+            {% endfor %}
+
+        </div>
+
+        <div class="admin-users sqlite-audit">
+
+            <span class="eyebrow">
+                BASE DE DATOS RELACIONAL · SQLITE
+            </span>
+
+            <h3>Bitácora de actividad</h3>
+
+            <p class="muted">
+                {{ audit_count }} eventos guardados en SQLite.
+                Los usuarios, productos y pedidos se almacenan en MongoDB.
+            </p>
+
+            {% for event in audit_logs %}
+
+            <article class="audit-row">
+
+                <strong>{{ event['action'] }}</strong>
+
+                <small>
+                    {{ event['username'] }} ·
+                    {{ event['created_at'][:19].replace('T', ' ') }}
+                </small>
+
+                <p>{{ event['details'] }}</p>
+
+            </article>
+
+            {% else %}
+
+            <p class="muted">
+                Todavía no hay actividad registrada.
+            </p>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+    </aside>
+
+</section>
+
+{% endblock %}
