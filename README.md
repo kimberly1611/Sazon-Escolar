@@ -220,9 +220,9 @@ sazon_flask_mongo/
 │
 │
 └── Docs/
-    ├── Formato_APA.docx
-    ├── Formato_APA.pdf
-    └── SAZÓN ESCOLAR_POWERPOINT_104321.pptx
+    ├── Sazon_Escolar.docx
+    ├── Sazon_Escolar.pdf
+    └── SAZÓN ESCOLAR.pptx
 ```
 
 ## 11. Solución de problemas
