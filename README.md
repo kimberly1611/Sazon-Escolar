@@ -176,28 +176,8 @@ El archivo de la base de datos se crea automáticamente dentro de la carpeta `in
 
 Esto permite demostrar el uso de dos tipos de bases de datos en el mismo proyecto.
 
-## 9. Acceso desde otros dispositivos
 
-Cuando se ejecuta en una computadora, la aplicación está disponible localmente.
-
-Para que los alumnos puedan acceder desde otras redes Wi-Fi o desde datos móviles, es necesario publicar el proyecto en un servicio de alojamiento web (*hosting*).
-
-En ese caso se necesita:
-
-1. Subir el proyecto a GitHub.
-2. Crear un servicio web en un proveedor de hosting compatible con Python.
-3. Configurar las variables de entorno de MongoDB y Flask.
-4. Configurar el comando de inicio:
-
-```bash
-gunicorn app:app
-```
-
-5. Compartir la dirección HTTPS pública que proporcione el hosting.
-
-La dirección local `127.0.0.1` no permite que otras personas entren desde Internet.
-
-## 10. Lectura de voz
+## 9. Lectura de voz
 
 Sazón Escolar incorpora una función de accesibilidad mediante la síntesis de voz del navegador.
 
@@ -211,7 +191,7 @@ Para utilizarla:
 
 La voz depende del navegador y de las voces instaladas en el dispositivo.
 
-## 11. Estructura del proyecto
+## 10. Estructura del proyecto
 
 ```text
 sazon_flask_mongo/
@@ -242,10 +222,10 @@ sazon_flask_mongo/
 └── Docs/
     ├── Formato_APA.docx
     ├── Formato_APA.pdf
-    └── .pptx
+    └── SAZÓN ESCOLAR_POWERPOINT_104321.pptx
 ```
 
-## 12. Solución de problemas
+## 11. Solución de problemas
 
 **Error: `ModuleNotFoundError`**
 
